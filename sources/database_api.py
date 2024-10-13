@@ -14,26 +14,19 @@ class DataBase:
 
     class Dishes(Base):
         __tablename__ = 'dishes'
-        name = Column(String(), primary_key=True)
-        datetime_add = Column(DateTime(), nullable=True)
+        name = Column(String(), nullable=True)
+        datetime_add = Column(DateTime(), primary_key=True)
         calories = Column(Integer(), nullable=False)
         proteins = Column(Integer(), nullable=False)
         fats = Column(Integer(), nullable=False)
         carbohydrates = Column(Integer(), nullable=False)
 
-    def get_dish(self, name: int):  # TODO: что возвращает
+    def get_dishes(self, name: int) -> Dishes:
         row = self.session.query(self.Dishes).filter(
-            self.Dishes.name == name).first()
+            self.Dishes.name == name)
         return row
     
-    def __is_dish_exists(self, name: int) -> bool:
-        answer = self.get_dish(name)
-        return answer is not None
-    
-    def add_dish(self, data: dict) -> str:
-        if self.__is_dish_exists(data['name']):
-            return "Такое блюдо уже существует"
-        
+    def add_dish(self, data: dict) -> None:        
         new_dish = self.Dishes(
             name = data['name'],
             datetime_add = datetime.now(),
@@ -46,11 +39,9 @@ class DataBase:
         self.session.add(new_dish)
         self.session.new
         self.session.commit()
-
-        return "Блюдо добавлено успешно"
     
     def edit_dish(self, data: dict) -> None:
-        row = self.get_dish(data['name'])
+        row = self.get_dishes(data['name'])
 
         updated_values = {
             self.Dishes.name: data['name'],
@@ -61,6 +52,7 @@ class DataBase:
         }
 
         row.update(updated_values, synchronize_session=False)
+        self.session.commit()
     
     def get_all_dishes(self) -> list:
-        return [name for name in self.session.query(self.Dishes.name)]
+        return [name[0] for name in self.session.query(self.Dishes.name).distinct()]
