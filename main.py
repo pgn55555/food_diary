@@ -2,6 +2,10 @@ from flask import Flask, render_template, send_file, request, redirect
 
 import os
 from configparser import ConfigParser
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set(style='darkgrid', palette='Set2', font_scale=1.6)
+
 
 from sources.database_api import DataBase
 
@@ -10,10 +14,7 @@ config.read('config.ini')
 app = Flask(__name__)
 app.secret_key = config['FLASK']['key']
 
-db_path = f"postgresql+psycopg2://{config['DATABASE']['POSTGRES_USER']}:\
-{config['DATABASE']['POSTGRES_PASSWORD']}@{config['DATABASE']['HOST']}:\
-{config['DATABASE']['PORT']}/{config['DATABASE']['POSTGRES_DB']}"
-db = DataBase(db_path)
+db = DataBase('postgresql://postgres:postgres@localhost:5432/postgres')
 
 def delete_files() -> None:
     for filename in os.listdir("files"):
@@ -79,46 +80,7 @@ def update():
 
 @app.route("/analytics")
 def analytics():
+    df = db.get_dataset()
+    plot = sns.lineplot(x=df['datetime_add'], y=df['calories'])
+    plt.savefig('output.png')
     return render_template('analytics.html')
-
-"""
-@app.route('/submit_encrypt', methods=['POST'])
-def submit_encrypt():
-    uploaded_file = request.files['fileInput']
-    file_path = os.path.join("files", uploaded_file.filename)
-    uploaded_file.save(file_path)
-
-    algo = request.form['selectAlgo']
-    key = request.form['keyAlgo']
-    if key == "":
-        key = "generate"
-
-    program = Main([file_path, algo, 'encrypt', key])
-    program.start()
-    
-    return send_file(file_path, as_attachment=True)
-
-@app.route('/submit_decrypt', methods=['POST'])
-def submit_decrypt():
-    uploaded_file = request.files['fileInput']
-    file_path = os.path.join("files", uploaded_file.filename)
-    uploaded_file.save(file_path)
-
-    algo = request.form['selectAlgo']
-    key = request.form['keyAlgo']
-
-    program = Main([file_path, algo, 'decrypt', key])
-    program.start()
-
-    return send_file(file_path, as_attachment=True)
-
-@app.route('/submit_hackermode', methods=['POST'])
-def submit_hackermode():
-    uploaded_file = request.files['fileInput']
-    file_path = os.path.join("files", uploaded_file.filename)
-    uploaded_file.save(file_path)
-
-    program = Main([file_path, 'caesar', 'decrypt', 'hackermode'])
-    program.start()
-    
-    return send_file(file_path, as_attachment=True)"""

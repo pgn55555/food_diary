@@ -2,6 +2,8 @@ from sqlalchemy import create_engine, Integer, String, DateTime, Column
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 
+import pandas as pd
+
 from datetime import datetime
 
 class DataBase:
@@ -56,3 +58,8 @@ class DataBase:
     
     def get_all_dishes(self) -> list:
         return [name[0] for name in self.session.query(self.Dishes.name).distinct()]
+    
+    def get_dataset(self) -> pd.DataFrame:
+        query = "SELECT * FROM dishes"
+        return pd.read_sql(query, self.engine)
+
