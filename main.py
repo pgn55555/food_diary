@@ -14,7 +14,7 @@ config.read('config.ini')
 app = Flask(__name__)
 app.secret_key = config['FLASK']['key']
 
-db = DataBase('postgresql://postgres:postgres@localhost:5432/postgres')
+db = DataBase('postgresql://postgres:postgres@db:5432/db')
 
 def delete_files() -> None:
     for filename in os.listdir("files"):
@@ -81,6 +81,8 @@ def update():
 @app.route("/analytics")
 def analytics():
     df = db.get_dataset()
+    plt.figure(figsize=(15, 8))
     plot = sns.lineplot(x=df['datetime_add'], y=df['calories'])
+    plot.tick_params(axis='x', rotation=45)
     plt.savefig('output.png')
     return render_template('analytics.html')
